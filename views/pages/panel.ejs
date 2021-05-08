@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>START ROOM SHOW</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/icomoon/style.css">
+   
+</head>
+<body>
+    <section class="container">
+       <div class="inputInfo">
+            <%if(locals.start){%>
+                <a><h2>Bonjour Mr. <%=userName%></h2></a>
+                <a href="/room?roomName=<%=roomName%>&roomToken=<%=roomToken%>&userRole=<%=userRole%>&userName=<%=userName%>">
+                    Accédez à la salle de cours : <%=roomName%>
+                </a>
+            <%}else{%>
+                <% if(success) {%>
+                    <p>STUDENT ACCOUNT ACCESS</p>
+                    <form action="/confirm" method="POST">
+                        <input type="hidden" name="confirm" value="CONFIRM">
+                        <select name="roomToken" >
+                            <% for (const key in cours) { %>
+                                <option value="<%=cours[key].roomToken%>"><%=cours[key].roomName%></option>
+                            <% }; %>
+                        </select>
+                        <input type="text" name="userName" placeholder="Inserez votre nom au complet">
+                        <p><input type="submit" value="Confirmez votre choix du cours"></p>
+                    </form>
+                <%}else{%>
+                    <p>Aucun cours n'est disponible</p>
+                <%}%>
+            <%}%>
+       </div>
+    </section>    
+</body>
+</html>

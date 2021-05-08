@@ -1,0 +1,92 @@
+*{
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-size: .85rem;
+}
+.container{
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+.inputInfo{
+  position: relative;
+  display: flex;
+  padding-top: 5rem;
+  align-items: center;
+  flex-direction: column ;
+  border: 1px solid gray;
+  box-shadow: 0 0 1em #000;
+  height: 40em;
+  width: 65em;
+  background-color: transparent;
+  transition: .5s;
+}
+.inputInfo #userPortrait{
+  height: 10rem;
+  width: 10rem;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(1,50,155,.8);
+}
+
+.inputInfo a{
+  border: 1px solid ;
+  padding: 10px;
+  margin: 2rem;
+  text-decoration: none;
+  text-shadow: 0 0 1px;
+  box-shadow:  0 0 5px;
+}
+.inputInfo a#LinkS{
+  position: absolute;
+  border-radius: 50%;
+  left: 0;
+  top: 0;
+  opacity: .1;
+}
+
+.effect{
+  transform: scale(.3);
+  transition: .5s;
+}
+.inputInfo form{
+  margin: 13em 0;
+  display: block;
+  text-align: center;
+  padding: 2.5em 0 2.5em 0
+}
+.inputInfo form input,
+.inputInfo form select,
+.inputInfo form button{
+  text-align : center;
+  transition: .5s;
+}
+input,select{
+  margin: 2.5px;
+  width: 30rem;
+  height: 30px;
+  border: none;
+  background-color: rgba(12,25,54,.3);
+  color: white;
+}
+form button, input[type=submit]{
+  margin-top: 2rem;
+  padding: 5px;
+  height: 50px;
+  cursor: pointer;
+  width: 200px;
+  border: none;
+  background-color: rgba(20,20,1,.5);
+  color: white;
+  font-size: 12px;
+  text-shadow: 0 0 1px #fff;
+}
+form button:hover,
+form input:hover,
+form select:hover{
+  box-shadow: 0 0 1em  rgba(20,20,1,.5);
+  transition: .5s;      
+}
+

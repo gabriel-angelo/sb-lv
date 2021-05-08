@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher tools</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+    <section class="container">
+        <div class="inputInfo">
+            <a id="LinkS" href="/panel">ST</a>
+            <% if(locals.success){%>
+                <a><h2>Bonjour Mr. <%=userName%></h2></a>
+                <img src="./img/leader.png" id="userPortrait">
+                <a href="/room?roomName=<%=roomName%>&roomToken=<%=roomToken%>&userRole=<%=userRole%>&userName=<%=userName%>">
+                    Commencez le cours : <%=roomName%>
+                </a>
+            <%}else{%>
+                
+            <p>PROFESSOR ACCOUNT ACCESS</p>
+                <form action="/cours" method="POST">
+                    <p><input type="text" name="cours" placeholder="Quel est l'intitulé du cours à dispensé" required></p>
+                    <p><input type="text" name="username" placeholder="Insérez votre nom, s'il vous plait" required></p>
+                    <input type="hidden" name="roomToken" value="<%=roomToken%>">
+                    <p><input type="submit" value="Démarrer le cours en ligne"></p>
+                </form>
+            <%}%>
+        </div>
+    </section>
+</body>
+</html>

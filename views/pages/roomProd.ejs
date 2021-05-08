@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>START ROOM SHOW</title>
+    <link rel="stylesheet" href="./css/css.css">
+</head>
+<body>
+    <div class="nav-bar">
+        <p id="roomTime"></p>
+        <p id="roomUser">
+            <span>Gabriel'angelo</span><br>
+            <span>Cours : Mathématiques</span>
+        </p>
+    </div>
+    <div id="msgContainer"></div>
+    <section>
+        <div id="video-container">
+            <button id="qOff" name="" class="qAlert">Arreter ma transmition</button>
+            <button id="QUESTION" class="qAlert">Poser un question</button>
+        </div>
+    </section>
+
+    <script src="./js/jquery-3.1.1.js" ></script>
+    <script src="./socket.io/socket.io.js"></script>
+    <script src="./js/peerjs.min.js"></script>
+
+    <script defer>
+        const sio = io()
+        const peer = new Peer(undefined,{
+                                            host:'sb-lcpeerjs.herokuapp.com',
+                                            port:443,
+                                            secure : true
+                                        }
+                                )
+        let videoContainer = document.getElementById("video-container")
+        let myVideo = document.createElement("video")
+        let peerUsers = {}
+        let hostQuestion = true
+        let askQst = false
+        let timer = false
+        var userRoom = {
+                        userName : qS().userName,
+                        userRole : qS().userRole,
+                        roomToken : qS().roomToken,
+                        roomName : qS().roomName,
+                        peerToken : peer.id
+                    }
+
+        sio.on("room timing",roomTimeCheck=>{
+            console.log((new Date()).valueOf() - roomTimeCheck);
+            let count = parseInt(((new Date()).valueOf() - roomTimeCheck) / 1000)
+            let h=m=0
+            timer = setInterval(() => {
+                        count++
+                        h = (Math.trunc(count/3600))% 24
+                        m = (Math.trunc(count/60))%60
+                        s = count%60 
+                        if (s<60 && m<1) {
+                            $("p#roomTime").text(s+" sec")
+                        } else if(m<60 && h<1){
+                            $("p#roomTime").text(m+"min "+ s+"sec")
+                        }else{
+                            $("p#roomTime").text(h+"h "+ m+"min  "+ s+"sec")
+                        }
+                    },1000);
+        })
+
+        function askQuestion(token){
+            sio.emit("QUESTION-AUTHORIZED",token.title)
+            token.remove()
+            $("#qOff").show()
+            askQst = true
+        }
+
+        peer.on("open",(id)=>{
+            userRoom.peerToken = id
+            console.log("ROOM TOKEN : ",userRoom.roomToken);
+            console.log(id);
+            console.log("En connexion");
+            sio.emit("join-room",userRoom.roomToken,userRoom)
+        })
+
+        sio.on('user-disconnected', (userId)=>{
+            console.log("QUELQU'UN S'EST DECONNECTE");
+            if(peerUsers[userId]) peerUsers[userId].close()
+        })
+
+        sio.on('host-disconnected', ()=>{
+            console.log("HOTE DECONNECTE");
+            $('video').remove()
+            clearInterval(timer)
+        })
+
+        $("button#QUESTION").click(()=>{
+            hostQuestion = false
+            console.log("POSE QUESTION", peer.id);
+            sio.emit("QUESTION-SOLLICITAION", peer.id)
+            $("#QUESTION").remove()
+            console.log("host question",hostQuestion);
+        })
+        
+        $("#qOff").click(()=>{
+            
+            console.log("host question",hostQuestion);
+            if($("video").is(":nth-last-child(2)"))
+                $('video:nth-last-child(1)').remove()
+            $("#qOff").remove()
+            if (userRoom.userRole==='STUDENT') $("#QUESTION").show()
+            sio.emit('user abort question')
+        })
+
+        sio.on('user abort question',()=>{
+            console.log("host question",hostQuestion);
+            console.log("User abort question");
+            if($("video").is(":nth-last-child(2)"))
+                $('video:nth-last-child(1)').remove()
+            $("#qOff").remove()
+            if (userRoom.userRole==='STUDENT') $("#QUESTION").show()
+        })
+
+		sio.on("QUESTION-SOLLICITATION", me =>{
+            $("#msgContainer").append(`
+                    <a class="questeur"
+                        title="${me.socketToken}"
+                        id="${me.peerToken}"
+                        onclick="askQuestion(this)">
+                        Mr(Me). ${me.ROLE} <br>
+                        veux poser une question
+                    </a>
+                `)
+        })
+
+        if (userRoom.userRole==='STUDENT') $(".qAlert").show()
+    
+        navigator.mediaDevices.getUserMedia({
+            video : {
+                        height : $(window).height(),
+                        width : $(window).width(),
+                        aspectRatio:$(window).width()/$(window).height(),
+                        
+                    },
+            audio : {
+                    echoCancellation : {exact:true},
+                    noiseSuppression : true
+                }
+        }).then((stream)=> {
+            
+
+            if (userRoom.userRole==='TEACHER') videoRemote(stream,myVideo)
+
+            sio.on("user-connected",(userId)=>{
+                console.log("SIGNAL UNIQUE LEADER");
+                connectToRoom(userId,stream)
+            })
+
+            sio.on("QUESTION-AUTH",peerToken =>{
+                console.log(peerToken.studentPeer===peer.id);
+                if (peerToken.studentPeer===peer.id) videoRemote(stream,myVideo)
+                
+                console.log(`RECUP::${peerToken.studentPeer} <::> MOI::${peer.id}`);
+                connectToRoom(peerToken.leaderPeer,stream)
+
+            })
+            
+            peer.on("call",(call)=>{
+                call.answer(stream)
+                const addRemoteVideo = document.createElement('video')
+
+                call.on('stream', stream=>{
+                    console.log('RECEPTION STREAMING');
+                    videoRemote(stream,addRemoteVideo)
+                })
+
+                call.on('close', ()=>{
+                    if (userRoom.userRole==='TEACHER') console.log(`FIN DU COURS`);
+                    addRemoteVideo.remove()
+                    $(`a#${call.peer}`).remove()
+                })
+            })
+        })
+
+        function connectToRoom(userId,stream){
+            console.log("UTILISATEUR CONNECTE");          
+            const call = peer.call(userId,stream)
+            peerUsers[userId] = call
+            
+            const addRemoteVideok = document.createElement('video')
+
+            call.on('stream', stream=>{
+                console.log('RECEPTION STREAMING');
+                if (userRoom.userRole==='STUDENT' && hostQuestion) videoRemote(stream,addRemoteVideok)
+                
+            })
+            call.on('close', ()=>{
+                console.log(`DECONNEXION CHEZ : ${call.peer}`);
+                if (userRoom.userRole==='TEACHER') $(`a#${call.peer}`).remove()
+                if (userRoom.userRole==='TEACHER' && askQst) $('video:nth-last-child(1)').remove()
+                if (userRoom.userRole==='TEACHER' && askQst) $("#qOff").remove()
+                askQst=false
+            }) 
+        }
+
+        function videoRemote(stream, target){
+            target.srcObject = stream
+            target.addEventListener("loadedmetadata",()=>{
+                target.play()
+            })
+            videoContainer.append(target)
+        }
+
+        function qS() {
+            let querySearch = window.location.search.substring(1)
+            if (querySearch==="") return false;
+            return JSON.parse('{"'+ decodeURI(querySearch).replace(/&/g,'","').replace(/\+/g,'').replace(/=/g,'":"')+'"}')
+        }
+
+
+    </script>
+</body>
+</html>

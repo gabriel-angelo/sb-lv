@@ -1,0 +1,22 @@
+{
+  "name": "livecourse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node iserver",
+    "start-dev": "nodemon iserver"
+  },
+  "author": "gabriel'angelo",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.6",
+    "socket.io": "^3.0.3"
+  }
+  ,"engines": {
+    "node": "12.x"
+  }
+}
